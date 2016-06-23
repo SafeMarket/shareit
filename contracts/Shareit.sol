@@ -116,10 +116,10 @@ contract Shareit{
     logs[getPeriod()].weiReceived += msg.value;
   }
 
-  function withdraw() {
+  function withdrawTo(address addr) {
     uint weiUnpaid = holders[msg.sender].weiUnpaid;
     holders[msg.sender].weiUnpaid = 0;
-    if(!msg.sender.call.value(weiUnpaid)())
+    if(!addr.call.value(weiUnpaid)())
       throw;
   }
 

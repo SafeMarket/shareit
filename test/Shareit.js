@@ -1,6 +1,7 @@
 "use strict";
 
 const fs = require('fs')
+const crypto = require('crypto')
 const contracts = JSON.parse(fs.readFileSync('./generated/contracts.json', 'utf8')).contracts
 const chaithereum = require('chaithereum')
 const web3 = chaithereum.web3
@@ -13,11 +14,29 @@ let shareit
 let created
 let account
 let accounts
+let addresses
 
 before(() => {
   return chaithereum.promise.then(() => {
     account = chaithereum.account
     accounts = chaithereum.accounts
+  })
+})
+
+before(() => {
+  //drain balances to 100 eth
+  return web3.Q.all(Object.keys(new Int8Array(10)).map((index) => {
+    return web3.eth.sendTransaction.q({
+      from: accounts[index],
+      to: 0,
+      value: web3.toBigNumber('0xffffffffffffff00000000000000001').minus(web3.toWei('100', 'ether'))
+    })
+  }))
+})
+
+before(() => {
+  return chaithereum.generateAddresses().then((_addresses) => {
+    addresses = _addresses
   })
 })
 
@@ -623,7 +642,7 @@ describe('period 3', () => {
     let holderParams
 
     it('should be retreivable', () => {
-      return shareit.getHolderParams.q(account).then((_holderParams) => {
+      return shareit.getHolderParams.q(accounts[0]).then((_holderParams) => {
         holderParams = _holderParams
       })
     })
@@ -637,8 +656,151 @@ describe('period 3', () => {
     })
   })
 
+  describe('account1 holder params', () => {
+    let holderParams
 
-  
+    it('should be retreivable', () => {
+      return shareit.getHolderParams.q(accounts[1]).then((_holderParams) => {
+        holderParams = _holderParams
+      })
+    })
+
+    it('should have 3 shares', () => {
+      expect(holderParams[0]).to.be.bignumber.equal(3)
+    })
+
+    it('should have 8 wei unpaid', () => {
+      expect(holderParams[1]).to.be.bignumber.equal(8)
+    })
+  })
+
+  describe('account2 holder params', () => {
+    let holderParams
+
+    it('should be retreivable', () => {
+      return shareit.getHolderParams.q(accounts[2]).then((_holderParams) => {
+        holderParams = _holderParams
+      })
+    })
+
+    it('should have 2 shares', () => {
+      expect(holderParams[0]).to.be.bignumber.equal(2)
+    })
+
+    it('should have 2 wei unpaid', () => {
+      expect(holderParams[1]).to.be.bignumber.equal(2)
+    })
+  })
+
+  describe('account3 holder params', () => {
+    let holderParams
+
+    it('should be retreivable', () => {
+      return shareit.getHolderParams.q(accounts[3]).then((_holderParams) => {
+        holderParams = _holderParams
+      })
+    })
+
+    it('should have 1 shares', () => {
+      expect(holderParams[0]).to.be.bignumber.equal(1)
+    })
+
+    it('should have 1 wei unpaid', () => {
+      expect(holderParams[1]).to.be.bignumber.equal(1)
+    })
+  })
+
+  describe('withdrawls', () => {
+
+    it('should withdraw accounts', () => {
+      return web3.Q.all(Object.keys(new Int8Array(4)).map((index) => {
+        return shareit.withdrawTo.q(addresses[index], { from: accounts[index] }).should.be.fulfilled
+      }))
+    })
+
+    it('should withdraw accounts', () => {
+      return web3.Q.all([
+        web3.eth.getBalance.q(addresses[0]).should.eventually.be.bignumber.equal(9),
+        web3.eth.getBalance.q(addresses[1]).should.eventually.be.bignumber.equal(8),
+        web3.eth.getBalance.q(addresses[2]).should.eventually.be.bignumber.equal(2),
+        web3.eth.getBalance.q(addresses[3]).should.eventually.be.bignumber.equal(1)
+      ])
+    })
+
+  })
+
+  describe('account0 holder params', () => {
+    let holderParams
+
+    it('should be retreivable', () => {
+      return shareit.getHolderParams.q(accounts[0]).then((_holderParams) => {
+        holderParams = _holderParams
+      })
+    })
+
+    it('should have 4 shares', () => {
+      expect(holderParams[0]).to.be.bignumber.equal(4)
+    })
+
+    it('should have 0 wei unpaid', () => {
+      expect(holderParams[1]).to.be.bignumber.equal(0)
+    })
+  })
+
+  describe('account1 holder params', () => {
+    let holderParams
+
+    it('should be retreivable', () => {
+      return shareit.getHolderParams.q(accounts[1]).then((_holderParams) => {
+        holderParams = _holderParams
+      })
+    })
+
+    it('should have 3 shares', () => {
+      expect(holderParams[0]).to.be.bignumber.equal(3)
+    })
+
+    it('should have 0 wei unpaid', () => {
+      expect(holderParams[1]).to.be.bignumber.equal(0)
+    })
+  })
+
+  describe('account2 holder params', () => {
+    let holderParams
+
+    it('should be retreivable', () => {
+      return shareit.getHolderParams.q(accounts[2]).then((_holderParams) => {
+        holderParams = _holderParams
+      })
+    })
+
+    it('should have 2 shares', () => {
+      expect(holderParams[0]).to.be.bignumber.equal(2)
+    })
+
+    it('should have 0 wei unpaid', () => {
+      expect(holderParams[1]).to.be.bignumber.equal(0)
+    })
+  })
+
+  describe('account3 holder params', () => {
+    let holderParams
+
+    it('should be retreivable', () => {
+      return shareit.getHolderParams.q(accounts[3]).then((_holderParams) => {
+        holderParams = _holderParams
+      })
+    })
+
+    it('should have 1 shares', () => {
+      expect(holderParams[0]).to.be.bignumber.equal(1)
+    })
+
+    it('should have 0 wei unpaid', () => {
+      expect(holderParams[1]).to.be.bignumber.equal(0)
+    })
+  })
+
 })
 
 function getNow(){
@@ -658,4 +820,10 @@ function getPeriod(time){
 
 function getRandomTime(){
   return Math.floor(Math.random() * 2 * getNow())
+}
+
+function generateRandomAddress(){
+  crypto.randomBytes(20, function(err, buffer) {
+    token = buffer.toString('hex');
+  })
 }

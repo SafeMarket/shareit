@@ -1,0 +1,30 @@
+{
+  "name": "shareit",
+  "version": "1.0.0",
+  "description": "Distribute eth to shareholders",
+  "main": "Gruntfile.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "grunt-solc": "^0.3.0",
+    "grunt-mocha-test": "^0.12.7",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt": "^1.0.1",
+    "chaithereum": "^1.2.0",
+    "mocha": "^2.5.3"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SafeMarket/shareit.git"
+  },
+  "author": "Aakil Fernandes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SafeMarket/shareit/issues"
+  },
+  "homepage": "https://github.com/SafeMarket/shareit#readme"
+}
